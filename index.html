@@ -96,8 +96,12 @@ body{font-family:'Malgun Gothic','맑은 고딕','Segoe UI',sans-serif;backgroun
 .lgdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .rnk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)}
 .rnk:last-child{border-bottom:none}
-.sync-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:var(--radius);margin-bottom:14px;font-size:12px;color:#2e7d32}
-.saved-line{display:flex;align-items:center;gap:7px;padding:4px 2px;margin-bottom:12px;font-size:11px;color:var(--text-secondary)}
+.sync-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:20px;margin-bottom:14px;font-size:11.5px;color:var(--text-secondary)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#1B873F;flex-shrink:0;transition:background .2s}
+.sync-chip.syncing .sync-dot{animation:syncPulse 1s ease-in-out infinite}
+@keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-time{color:var(--text-hint);font-size:10.5px;padding-left:6px;border-left:1px solid var(--border)}
+.sync-time:empty{display:none;border:none}
 .frow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .fbtn{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);transition:all .15s}
 .fbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -110,8 +114,18 @@ body{font-family:'Malgun Gothic','맑은 고딕','Segoe UI',sans-serif;backgroun
 @media(max-width:680px){.evid-qgrid{grid-template-columns:1fr}}
 .evid-q{display:flex;flex-direction:column}
 .evid-q-lbl{font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:5px}
-.evid-ta{width:100%;min-height:60px;padding:8px 10px;font-size:12px;font-family:inherit;line-height:1.5;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-primary);color:var(--text-primary);resize:vertical}
-.evid-ta:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.1)}
+.efile-list{display:flex;flex-direction:column;gap:5px;margin-bottom:7px;min-height:20px}
+.efile{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:8px}
+.efile-ic{font-size:14px;flex-shrink:0}
+.efile-nm{flex:1;min-width:0;font-size:11.5px;color:var(--blue);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.efile-nm:hover{text-decoration:underline}
+.efile-sz{font-size:9.5px;color:var(--text-hint);flex-shrink:0}
+.efile-del{flex-shrink:0;width:18px;height:18px;border:none;border-radius:50%;background:transparent;color:var(--text-hint);font-size:14px;line-height:1;cursor:pointer;padding:0}
+.efile-del:hover{background:var(--red);color:#fff}
+.efile-empty{font-size:10.5px;color:var(--text-hint);padding:7px 9px;text-align:center;border:1px dashed var(--border);border-radius:8px}
+.efile-add{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--navy);background:var(--bg-primary);border:1px dashed var(--blue);border-radius:8px;cursor:pointer;transition:all .15s}
+.efile-add:hover{background:#f0f6ff}
+.efile-add.uploading{opacity:.6;pointer-events:none;border-style:solid}
 .mon-toggle-btn{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer}
 .mon-toggle-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .mon-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
@@ -167,7 +181,7 @@ const I18N = {
     sysSubtitle: '오일허브코리아여수 (OKYC)',
     yearBadge: '2026년 연간 관리',
     tabOverview: '📊 총괄 현황',
-    syncMsg: '구글 시트와 실시간 동기화됩니다. 입력 후 저장하면 모든 팀장이 즉시 확인할 수 있습니다.',
+    syncIdle: '구글 시트 연동됨', syncSyncing: '동기화 중…', syncOk: '저장됨', syncLocal: '오프라인 (로컬 저장)', syncError: '저장 실패',
     lastSaved: '마지막 저장',
     kpiAvg: '전사 평균 점수', kpiAvgSub: '입력 팀 기준 가중평균',
     kpiFinAvg: '재무목표 평균', kpiFinAvgSub: '전사 재무지표 가중평균',
@@ -206,8 +220,15 @@ const I18N = {
     noData: '—',
     lineRef80: '80점 기준', lineRef90: '90점 기준',
     evidTitle: '분기별 근거자료',
-    evidHint: '실적 근거·산출 내역을 분기별로 기록 (자동저장)',
-    evidPlaceholder: '실적 근거, 산출 내역, 참고사항 등을 입력하세요',
+    evidHint: '분기별 실적 근거를 파일(PDF·엑셀 등)로 첨부 (자동저장)',
+    evidAdd: '+ 파일 첨부',
+    evidEmpty: '첨부된 파일 없음',
+    evidDel: '삭제',
+    evidUploading: '업로드 중…',
+    evidUploadOk: '파일이 첨부되었습니다',
+    evidUploadFail: '업로드에 실패했습니다',
+    evidTooBig: '파일 용량이 너무 큽니다 (최대 30MB)',
+    evidDelConfirm: '이 파일을 삭제하시겠습니까?',
     monToggle: '월별 실적 입력',
     monHint: '점수는 분기 단위로 평가됩니다. 월별 칸은 추이 관찰용 선택 입력입니다.',
     months: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -216,14 +237,13 @@ const I18N = {
     trendUnit: '추이 단위',
     monValPlaceholder: '값',
     hdrSave: '저장',
-    dismiss: '안내문 닫기',
   },
   en: {
     sysTitle: '2026 MBO Performance Indicator Management System',
     sysSubtitle: 'Oil Hub Korea Yeosu (OKYC)',
     yearBadge: '2026 Annual Management',
     tabOverview: '📊 Overview',
-    syncMsg: 'Synced with Google Sheets in real time. Save your entries and all team leads can see them instantly.',
+    syncIdle: 'Google Sheets connected', syncSyncing: 'Syncing…', syncOk: 'Saved', syncLocal: 'Offline (local)', syncError: 'Save failed',
     lastSaved: 'Last saved',
     kpiAvg: 'Company Average', kpiAvgSub: 'Weighted avg of entered teams',
     kpiFinAvg: 'Financial Avg', kpiFinAvgSub: 'Company-wide financial weighted avg',
@@ -262,8 +282,15 @@ const I18N = {
     noData: '—',
     lineRef80: '80pt ref', lineRef90: '90pt ref',
     evidTitle: 'Quarterly Evidence',
-    evidHint: 'Record performance basis & calculation by quarter (auto-saved)',
-    evidPlaceholder: 'Enter performance basis, calculation details, notes, etc.',
+    evidHint: 'Attach evidence files (PDF, Excel, etc.) by quarter (auto-saved)',
+    evidAdd: '+ Attach file',
+    evidEmpty: 'No files attached',
+    evidDel: 'Delete',
+    evidUploading: 'Uploading…',
+    evidUploadOk: 'File attached',
+    evidUploadFail: 'Upload failed',
+    evidTooBig: 'File too large (max 30MB)',
+    evidDelConfirm: 'Delete this file?',
     monToggle: 'Monthly result entry',
     monHint: 'Scores are evaluated quarterly. Monthly fields are optional, for trend tracking only.',
     months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
@@ -272,7 +299,6 @@ const I18N = {
     trendUnit: 'Trend unit',
     monValPlaceholder: 'Value',
     hdrSave: 'Save',
-    dismiss: 'Dismiss',
   }
 };
 
@@ -337,18 +363,18 @@ let CHARTS={};
 let AUTO_TIMER=null;
 let OFF_FILTER='all';
 let TREND_MODE='q'; // 'q'=분기, 'm'=월별
-let SYNC_BAR_HIDDEN=false; // 안내문 닫기 상태
 
-/* 신규 필드 보강: 기존 데이터에 근거(분기별 텍스트)/월별 필드가 없으면 생성 */
+/* 신규 필드 보강: 근거파일(분기별 파일 배열)/월별 필드 생성 */
 function ensureFields(data){
   data.forEach(t=>t.지표.forEach(ind=>{
-    // 근거자료: 분기별 텍스트 서술 방식
-    if(!ind.근거||typeof ind.근거!=='object'||Array.isArray(ind.근거)){
-      ind.근거={Q1:'',Q2:'',Q3:'',Q4:''};
+    // 근거파일: 분기별 파일 메타 배열 {name, fileId, url, size}
+    if(!ind.근거파일||typeof ind.근거파일!=='object'||Array.isArray(ind.근거파일)){
+      ind.근거파일={Q1:[],Q2:[],Q3:[],Q4:[]};
     }else{
-      QS.forEach(q=>{if(ind.근거[q]===undefined)ind.근거[q]='';});
+      QS.forEach(q=>{if(!Array.isArray(ind.근거파일[q]))ind.근거파일[q]=[];});
     }
-    delete ind.근거자료; // 구버전 배열 필드 제거
+    delete ind.근거;     // 구버전 텍스트 필드 제거
+    delete ind.근거자료; // 더 오래된 배열 필드 제거
     if(!ind.월별||typeof ind.월별!=='object'){
       ind.월별={};for(let m=1;m<=12;m++)ind.월별['M'+m]='';
     }else{
@@ -421,7 +447,7 @@ function applyData(parsed){
   parsed.forEach((pt,i)=>{if(!DATA[i])return;pt.지표&&pt.지표.forEach((pi,j)=>{
     if(DATA[i].지표[j]){
       DATA[i].지표[j].분기=pi.분기||DATA[i].지표[j].분기;
-      if(pi.근거&&typeof pi.근거==='object'&&!Array.isArray(pi.근거))DATA[i].지표[j].근거=pi.근거;
+      if(pi.근거파일&&typeof pi.근거파일==='object'&&!Array.isArray(pi.근거파일))DATA[i].지표[j].근거파일=pi.근거파일;
       if(pi.월별&&typeof pi.월별==='object')DATA[i].지표[j].월별=pi.월별;
     }
   });});
@@ -432,17 +458,35 @@ function applyData(parsed){
 /* ── Google Apps Script 연동 설정 ── */
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwwoWTHP_YikWiBeO7j0O6MgF1Xj2oDrca0a-nGKUTk5HdBRq_DfLaNPHo7uZz8nr6f/exec';
 
-/* 동기 상태 표시 */
+/* 동기 상태 표시 — 총괄 화면의 동기화 칩 + 헤더 배지 */
 function setSyncStatus(state){
   /* state: 'syncing' | 'ok' | 'local' | 'error' */
-  const b=document.getElementById('savedBadge');
-  const map={syncing:'⟳ 동기화 중…',ok:'✓ 저장됨',local:'📴 로컬 저장',error:'⚠ 저장 실패'};
+  const tx=T();
+  const txt={syncing:tx.syncSyncing,ok:tx.syncOk,local:tx.syncLocal,error:tx.syncError};
   const col={syncing:'#F59E0B',ok:'#1B873F',local:'#6B7280',error:'#DC2626'};
-  if(!b)return;
-  b.textContent=map[state]||state;
-  b.style.background=col[state]||'#6B7280';
-  b.style.display='inline';
-  if(state==='ok'||state==='local')setTimeout(()=>{b.style.display='none';},3000);
+  /* 동기화 칩 갱신 */
+  const chip=document.getElementById('syncChip');
+  const dot=document.getElementById('syncDot');
+  const ct=document.getElementById('syncChipText');
+  if(dot)dot.style.background=col[state]||'#6B7280';
+  if(ct)ct.textContent=txt[state]||tx.syncIdle;
+  if(chip){
+    chip.classList.toggle('syncing',state==='syncing');
+    /* 저장 완료 후 잠시 뒤 시각 갱신 */
+    if(state==='ok'){
+      const tm=chip.querySelector('.sync-time');
+      if(tm)tm.textContent=tx.lastSaved+': '+(STORAGE.time()||tx.noData);
+      setTimeout(()=>{if(ct)ct.textContent=tx.syncIdle;},2500);
+    }
+  }
+  /* 헤더 배지 (간단 표시) */
+  const b=document.getElementById('savedBadge');
+  if(b){
+    const bmap={syncing:'⟳',ok:'✓',local:'📴',error:'⚠'};
+    b.textContent=bmap[state]||'';
+    b.style.background=col[state]||'#6B7280';
+    b.style.display=(state==='syncing')?'inline':'none';
+  }
 }
 
 /* 스토리지 어댑터 — Google Sheets 양방향 연동 */
@@ -505,12 +549,6 @@ async function loadLocal(){
     if(!parsed)return false;
     return applyData(parsed);
   }catch(e){}return false;
-}
-
-/* ── 안내문 닫기 ── */
-function dismissSyncBar(){
-  SYNC_BAR_HIDDEN=true;
-  renderOv();
 }
 
 /* ── 전체 저장 (헤더 저장 버튼) ──
@@ -606,17 +644,11 @@ function renderOv(){
   const ls=STORAGE.time();
 
   ov.innerHTML=`
-  ${SYNC_BAR_HIDDEN?`
-  <div class="saved-line">
-    <span style="width:7px;height:7px;border-radius:50%;background:#1B873F;display:inline-block;flex-shrink:0"></span>
-    <span>${tx.lastSaved}: ${ls||tx.noData}</span>
-  </div>`:`
-  <div class="sync-bar">
-    <span style="width:8px;height:8px;border-radius:50%;background:#1B873F;display:inline-block;flex-shrink:0"></span>
-    <span style="flex:1">${tx.syncMsg}</span>
-    <span style="font-size:11px;white-space:nowrap;color:#1b5e20">${tx.lastSaved}: ${ls||tx.noData}</span>
-    <button onclick="dismissSyncBar()" title="${tx.dismiss}" style="border:none;background:transparent;color:#2e7d32;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0">×</button>
-  </div>`}
+  <div class="sync-chip" id="syncChip">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncChipText">${tx.syncIdle}</span>
+    <span class="sync-time">${ls?tx.lastSaved+': '+ls:''}</span>
+  </div>
   <div class="krow">
     <div class="kpi"><div class="klbl">📊 ${tx.kpiAvg}</div><div class="kval" style="color:#1565C0">${avg?avg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiAvgSub}</div></div>
     <div class="kpi"><div class="klbl">💰 ${tx.kpiFinAvg}</div><div class="kval" style="color:#D97706">${finAvg?finAvg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiFinAvgSub}</div></div>
@@ -791,14 +823,41 @@ function renderQTrend(sc2){
 /* ═══ 근거자료 / 월별 블록 ═══ */
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+function fmtSize(bytes){
+  if(!bytes||bytes<0)return'';
+  if(bytes<1024)return bytes+' B';
+  if(bytes<1024*1024)return(bytes/1024).toFixed(0)+' KB';
+  return(bytes/1024/1024).toFixed(1)+' MB';
+}
+function fileIcon(name){
+  const n=(name||'').toLowerCase();
+  if(n.endsWith('.pdf'))return'📕';
+  if(n.endsWith('.xlsx')||n.endsWith('.xls')||n.endsWith('.csv'))return'📊';
+  if(n.endsWith('.doc')||n.endsWith('.docx'))return'📄';
+  if(n.endsWith('.ppt')||n.endsWith('.pptx'))return'📑';
+  if(/\.(png|jpg|jpeg|gif|webp)$/.test(n))return'🖼️';
+  return'📎';
+}
+
 function evidenceBlock(idx,iIdx,ind){
   const tx=T();
   const cells=QS.map(q=>{
-    const v=ind.근거[q]||'';
+    const files=(ind.근거파일&&ind.근거파일[q])||[];
+    const list=files.length?files.map((f,k)=>`
+      <div class="efile">
+        <span class="efile-ic">${fileIcon(f.name)}</span>
+        <a class="efile-nm" href="${esc(f.url||'#')}" target="_blank" rel="noopener" title="${esc(f.name)}">${esc(f.name)}</a>
+        <span class="efile-sz">${fmtSize(f.size)}</span>
+        <button class="efile-del" onclick="delEvidFile(${idx},${iIdx},'${q}',${k})" title="${tx.evidDel}">×</button>
+      </div>`).join(''):`<div class="efile-empty">${tx.evidEmpty}</div>`;
     return`<div class="evid-q">
       <div class="evid-q-lbl">${q} <span style="font-weight:400;color:var(--text-hint)">${tx.qPeriods[q]}</span></div>
-      <textarea class="evid-ta" id="ev-${idx}-${iIdx}-${q}" placeholder="${tx.evidPlaceholder}"
-        oninput="onEvidChange(${idx},${iIdx},'${q}')">${esc(v)}</textarea>
+      <div class="efile-list" id="ef-list-${idx}-${iIdx}-${q}">${list}</div>
+      <label class="efile-add" id="ef-add-${idx}-${iIdx}-${q}">
+        <input type="file" accept=".pdf,.xlsx,.xls,.csv,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg"
+          style="display:none" onchange="uploadEvidFile(${idx},${iIdx},'${q}',this)">
+        <span>${tx.evidAdd}</span>
+      </label>
     </div>`;
   }).join('');
   return`<div class="subsec">
@@ -837,10 +896,67 @@ function scheduleSave(){
   },1500);
 }
 
-function onEvidChange(idx,iIdx,q){
-  const el=document.getElementById(`ev-${idx}-${iIdx}-${q}`);
-  if(el)DATA[idx].지표[iIdx].근거[q]=el.value;
-  scheduleSave();
+/* 분기별 근거파일 업로드 — 구글 드라이브로 전송 */
+const EVID_MAX=30*1024*1024; // 30MB 권장 상한
+async function uploadEvidFile(idx,iIdx,q,input){
+  const file=input.files&&input.files[0];
+  if(!file){return;}
+  const tx=T();
+  if(file.size>EVID_MAX){
+    showToast(tx.evidTooBig,false);input.value='';return;
+  }
+  const addBtn=document.getElementById(`ef-add-${idx}-${iIdx}-${q}`);
+  if(addBtn){addBtn.classList.add('uploading');addBtn.querySelector('span').textContent=tx.evidUploading;}
+  try{
+    const dataUrl=await new Promise((res,rej)=>{
+      const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);
+    });
+    const base64=String(dataUrl).split(',')[1]||'';
+    const teamName=DATA[idx].ko;
+    const indName=DATA[idx].지표[iIdx].ko;
+    const res=await fetch(SCRIPT_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'upload',team:teamName,indicator:indName,quarter:q,filename:file.name,mimeType:file.type||'application/octet-stream',data:base64})
+    });
+    const json=await res.json();
+    if(json&&json.status==='ok'&&json.url){
+      DATA[idx].지표[iIdx].근거파일[q].push({name:file.name,fileId:json.fileId||'',url:json.url,size:file.size});
+      refreshEvidList(idx,iIdx,q);
+      await saveLocal();
+      showToast(tx.evidUploadOk,true);
+    }else{
+      showToast((json&&json.message)||tx.evidUploadFail,false);
+    }
+  }catch(e){
+    showToast(tx.evidUploadFail,false);
+  }finally{
+    if(addBtn){addBtn.classList.remove('uploading');addBtn.querySelector('span').textContent=tx.evidAdd;}
+    input.value='';
+  }
+}
+
+function delEvidFile(idx,iIdx,q,k){
+  const tx=T();
+  if(!confirm(tx.evidDelConfirm))return;
+  DATA[idx].지표[iIdx].근거파일[q].splice(k,1);
+  refreshEvidList(idx,iIdx,q);
+  saveLocal();
+}
+
+/* 해당 분기 파일 목록만 다시 그림 (전체 재렌더 없이 — 다른 입력칸 값 보존) */
+function refreshEvidList(idx,iIdx,q){
+  const cont=document.getElementById(`ef-list-${idx}-${iIdx}-${q}`);
+  if(!cont)return;
+  const tx=T();
+  const files=(DATA[idx].지표[iIdx].근거파일&&DATA[idx].지표[iIdx].근거파일[q])||[];
+  cont.innerHTML=files.length?files.map((f,k)=>`
+    <div class="efile">
+      <span class="efile-ic">${fileIcon(f.name)}</span>
+      <a class="efile-nm" href="${esc(f.url||'#')}" target="_blank" rel="noopener" title="${esc(f.name)}">${esc(f.name)}</a>
+      <span class="efile-sz">${fmtSize(f.size)}</span>
+      <button class="efile-del" onclick="delEvidFile(${idx},${iIdx},'${q}',${k})" title="${tx.evidDel}">×</button>
+    </div>`).join(''):`<div class="efile-empty">${tx.evidEmpty}</div>`;
 }
 
 /* 월별 토글: 전체 재렌더 대신 해당 블록만 교체 (다른 입력칸 값 보존) */
