@@ -27,8 +27,10 @@ body{font-family:'Malgun Gothic','맑은 고딕','Segoe UI',sans-serif;backgroun
 .lang-toggle{display:flex;align-items:center;background:rgba(255,255,255,.12);border-radius:20px;padding:3px;gap:2px;border:none;cursor:default}
 .lang-btn{padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,.65);transition:all .2s;letter-spacing:.02em}
 .lang-btn.on{background:#fff;color:var(--navy)}
-.hbtn{width:30px;height:30px;border-radius:6px;border:none;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:14px;cursor:pointer;transition:background .15s}
-.hbtn:hover{background:rgba(255,255,255,.3)}
+.hsave-btn{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 16px;border-radius:7px;border:none;background:#fff;color:var(--navy);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.hsave-btn:hover{background:#f0f4ff;transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.hsave-btn:active{transform:translateY(0)}
+.hsave-btn:disabled{opacity:.6;cursor:wait}
 .tabs{display:flex;gap:3px;overflow-x:auto;padding-bottom:0;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{height:3px}.tabs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
 .tab{padding:8px 14px;border-radius:6px 6px 0 0;font-size:12px;font-weight:500;cursor:pointer;border:none;background:rgba(255,255,255,.11);color:rgba(255,255,255,.65);white-space:nowrap;transition:all .15s;flex-shrink:0}
@@ -95,6 +97,7 @@ body{font-family:'Malgun Gothic','맑은 고딕','Segoe UI',sans-serif;backgroun
 .rnk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)}
 .rnk:last-child{border-bottom:none}
 .sync-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:var(--radius);margin-bottom:14px;font-size:12px;color:#2e7d32}
+.saved-line{display:flex;align-items:center;gap:7px;padding:4px 2px;margin-bottom:12px;font-size:11px;color:var(--text-secondary)}
 .frow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .fbtn{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);transition:all .15s}
 .fbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -132,9 +135,7 @@ body{font-family:'Malgun Gothic','맑은 고딕','Segoe UI',sans-serif;backgroun
           <button class="lang-btn on" id="btnKO" onclick="setLang('ko')">한국어</button>
           <button class="lang-btn" id="btnEN" onclick="setLang('en')">English</button>
         </div>
-        <button class="hbtn" id="btnExport" onclick="exportData()" title="">⬇</button>
-        <button class="hbtn" id="btnImport" onclick="document.getElementById('importFile').click()" title="">⬆</button>
-        <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+        <button class="hsave-btn" id="hdrSaveBtn" onclick="saveAll()">💾 <span id="hdrSaveLbl">저장</span></button>
         <span class="badge badge-white" id="hdrBadge">2026년 연간 관리</span>
         <span class="badge badge-green" id="savedBadge" style="display:none">✓</span>
       </div>
@@ -166,7 +167,7 @@ const I18N = {
     sysSubtitle: '오일허브코리아여수 (OKYC)',
     yearBadge: '2026년 연간 관리',
     tabOverview: '📊 총괄 현황',
-    syncMsg: '구글 시트와 실시간 동기화됩니다. 저장 버튼을 누르면 모든 팀장이 즉시 확인할 수 있습니다. ⬇ 버튼으로 JSON 백업도 가능합니다.',
+    syncMsg: '구글 시트와 실시간 동기화됩니다. 입력 후 저장하면 모든 팀장이 즉시 확인할 수 있습니다.',
     lastSaved: '마지막 저장',
     kpiAvg: '전사 평균 점수', kpiAvgSub: '입력 팀 기준 가중평균',
     kpiFinAvg: '재무목표 평균', kpiFinAvgSub: '전사 재무지표 가중평균',
@@ -214,18 +215,15 @@ const I18N = {
     trendQ: '분기별', trendM: '월별',
     trendUnit: '추이 단위',
     monValPlaceholder: '값',
-    exportTitle: '데이터 내보내기 (JSON 백업)',
-    importTitle: '데이터 가져오기 (JSON 불러오기)',
-    importOk: '데이터를 불러왔습니다',
-    importFail: '파일 형식이 올바르지 않습니다',
-    importConfirm: '현재 입력된 데이터를 파일 내용으로 덮어씁니다. 계속하시겠습니까?',
+    hdrSave: '저장',
+    dismiss: '안내문 닫기',
   },
   en: {
     sysTitle: '2026 MBO Performance Indicator Management System',
     sysSubtitle: 'Oil Hub Korea Yeosu (OKYC)',
     yearBadge: '2026 Annual Management',
     tabOverview: '📊 Overview',
-    syncMsg: 'Synced with Google Sheets in real time. Press Save to share updates with all team leads instantly. Use ⬇ for a JSON backup.',
+    syncMsg: 'Synced with Google Sheets in real time. Save your entries and all team leads can see them instantly.',
     lastSaved: 'Last saved',
     kpiAvg: 'Company Average', kpiAvgSub: 'Weighted avg of entered teams',
     kpiFinAvg: 'Financial Avg', kpiFinAvgSub: 'Company-wide financial weighted avg',
@@ -273,11 +271,8 @@ const I18N = {
     trendQ: 'Quarterly', trendM: 'Monthly',
     trendUnit: 'Trend unit',
     monValPlaceholder: 'Value',
-    exportTitle: 'Export data (JSON backup)',
-    importTitle: 'Import data (load JSON)',
-    importOk: 'Data loaded successfully',
-    importFail: 'Invalid file format',
-    importConfirm: 'This will overwrite current data with the file contents. Continue?',
+    hdrSave: 'Save',
+    dismiss: 'Dismiss',
   }
 };
 
@@ -342,6 +337,7 @@ let CHARTS={};
 let AUTO_TIMER=null;
 let OFF_FILTER='all';
 let TREND_MODE='q'; // 'q'=분기, 'm'=월별
+let SYNC_BAR_HIDDEN=false; // 안내문 닫기 상태
 
 /* 신규 필드 보강: 기존 데이터에 근거(분기별 텍스트)/월별 필드가 없으면 생성 */
 function ensureFields(data){
@@ -511,37 +507,25 @@ async function loadLocal(){
   }catch(e){}return false;
 }
 
-/* ── JSON 내보내기 / 가져오기 (깃허브 백업·이전용) ── */
-function exportData(){
-  const payload={version:'v4',exportedAt:new Date().toISOString(),data:serializeData()};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const d=new Date(),pad=n=>String(n).padStart(2,'0');
-  a.href=url;a.download=`OKYC_MBO_2026_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast(T().exportTitle,true);
+/* ── 안내문 닫기 ── */
+function dismissSyncBar(){
+  SYNC_BAR_HIDDEN=true;
+  renderOv();
 }
-function importData(input){
-  const file=input.files&&input.files[0];if(!file)return;
+
+/* ── 전체 저장 (헤더 저장 버튼) ──
+   현재 입력된 모든 팀 데이터를 구글 시트에 저장 */
+async function saveAll(){
+  const btn=document.getElementById('hdrSaveBtn');
+  const lbl=document.getElementById('hdrSaveLbl');
   const tx=T();
-  if(!confirm(tx.importConfirm)){input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    try{
-      const obj=JSON.parse(e.target.result);
-      const arr=Array.isArray(obj)?obj:obj.data;
-      if(applyData(arr)){
-        await saveLocal();
-        if(!document.getElementById('tab-overview').classList.contains('hidden'))renderOv();
-        else renderInp(CUR_IDX);
-        showToast(tx.importOk,true);
-      }else{showToast(tx.importFail,false);}
-    }catch(err){showToast(tx.importFail,false);}
-    input.value='';
-  };
-  reader.readAsText(file);
+  if(btn)btn.disabled=true;
+  if(lbl)lbl.textContent=tx.saving;
+  const ok=await saveLocal();
+  if(lbl)lbl.textContent=ok?tx.saveOk:tx.saveFail;
+  if(btn)btn.disabled=false;
+  showToast(ok?tx.toastOk:tx.toastFail,ok);
+  setTimeout(()=>{if(lbl)lbl.textContent=tx.hdrSave;},2500);
 }
 
 /* ── 언어 전환 ── */
@@ -552,8 +536,7 @@ function setLang(lang){
   document.getElementById('hdrTitle').textContent=T().sysTitle;
   document.getElementById('hdrSub').textContent=T().sysSubtitle;
   document.getElementById('hdrBadge').textContent=T().yearBadge;
-  const be=document.getElementById('btnExport'),bi=document.getElementById('btnImport');
-  if(be)be.title=T().exportTitle;if(bi)bi.title=T().importTitle;
+  const sl=document.getElementById('hdrSaveLbl');if(sl)sl.textContent=T().hdrSave;
   buildTabs();
   if(!document.getElementById('tab-overview').classList.contains('hidden'))renderOv();
   else renderInp(CUR_IDX);
@@ -623,11 +606,17 @@ function renderOv(){
   const ls=STORAGE.time();
 
   ov.innerHTML=`
+  ${SYNC_BAR_HIDDEN?`
+  <div class="saved-line">
+    <span style="width:7px;height:7px;border-radius:50%;background:#1B873F;display:inline-block;flex-shrink:0"></span>
+    <span>${tx.lastSaved}: ${ls||tx.noData}</span>
+  </div>`:`
   <div class="sync-bar">
     <span style="width:8px;height:8px;border-radius:50%;background:#1B873F;display:inline-block;flex-shrink:0"></span>
-    ${tx.syncMsg}
-    <span style="margin-left:auto;font-size:11px;white-space:nowrap">${tx.lastSaved}: ${ls||tx.noData}</span>
-  </div>
+    <span style="flex:1">${tx.syncMsg}</span>
+    <span style="font-size:11px;white-space:nowrap;color:#1b5e20">${tx.lastSaved}: ${ls||tx.noData}</span>
+    <button onclick="dismissSyncBar()" title="${tx.dismiss}" style="border:none;background:transparent;color:#2e7d32;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0">×</button>
+  </div>`}
   <div class="krow">
     <div class="kpi"><div class="klbl">📊 ${tx.kpiAvg}</div><div class="kval" style="color:#1565C0">${avg?avg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiAvgSub}</div></div>
     <div class="kpi"><div class="klbl">💰 ${tx.kpiFinAvg}</div><div class="kval" style="color:#D97706">${finAvg?finAvg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiFinAvgSub}</div></div>
@@ -1010,8 +999,7 @@ async function init(){
   document.getElementById('hdrTitle').textContent=T().sysTitle;
   document.getElementById('hdrSub').textContent=T().sysSubtitle;
   document.getElementById('hdrBadge').textContent=T().yearBadge;
-  const be=document.getElementById('btnExport'),bi=document.getElementById('btnImport');
-  if(be)be.title=T().exportTitle;if(bi)bi.title=T().importTitle;
+  const sl=document.getElementById('hdrSaveLbl');if(sl)sl.textContent=T().hdrSave;
   buildTabs();showOv();
 }
 init();
