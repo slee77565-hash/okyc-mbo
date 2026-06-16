@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKYC 2026 MBO Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#ffffff;--bg-secondary:#f8f9fa;--bg-tertiary:#f1f3f5;
+  --text-primary:#212529;--text-secondary:#6c757d;--text-hint:#adb5bd;
+  --border:#dee2e6;--border-light:#e9ecef;
+  --radius:8px;--radius-lg:12px;
+  --navy:#1F3864;--blue:#2E75B6;--green:#1B873F;--amber:#D97706;--red:#DC2626;
+}
+body{font-family:'Malgun Gothic','맑은 고딕','Segoe UI',sans-serif;background:var(--bg-tertiary);color:var(--text-primary);font-size:14px;line-height:1.5}
+.app{min-height:100vh;padding-bottom:40px}
+.hdr{background:var(--navy);padding:14px 22px 0;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.htop{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;flex-wrap:wrap;gap:8px}
+.htitle{font-size:17px;font-weight:600}
+.hsub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.hbadges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;padding:4px 10px;border-radius:4px}
+.badge-white{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9)}
+.badge-green{background:rgba(71,173,144,.25);color:#7ee8c8}
+.lang-toggle{display:flex;align-items:center;background:rgba(255,255,255,.12);border-radius:20px;padding:3px;gap:2px;border:none;cursor:default}
+.lang-btn{padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,.65);transition:all .2s;letter-spacing:.02em}
+.lang-btn.on{background:#fff;color:var(--navy)}
+.hbtn{width:30px;height:30px;border-radius:6px;border:none;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:14px;cursor:pointer;transition:background .15s}
+.hbtn:hover{background:rgba(255,255,255,.3)}
+.tabs{display:flex;gap:3px;overflow-x:auto;padding-bottom:0;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{height:3px}.tabs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
+.tab{padding:8px 14px;border-radius:6px 6px 0 0;font-size:12px;font-weight:500;cursor:pointer;border:none;background:rgba(255,255,255,.11);color:rgba(255,255,255,.65);white-space:nowrap;transition:all .15s;flex-shrink:0}
+.tab:hover{background:rgba(255,255,255,.2);color:#fff}
+.tab.on{background:#fff;color:var(--navy)}
+.body{padding:16px 20px;max-width:1400px;margin:0 auto}
+.hidden{display:none!important}
+.krow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:768px){.krow{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+.klbl{font-size:11px;color:var(--text-secondary);margin-bottom:5px}
+.kval{font-size:22px;font-weight:600;line-height:1.2}
+.ksub{font-size:11px;color:var(--text-secondary);margin-top:3px}
+.card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.ct{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px}
+.grid11{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:900px){.grid2,.grid11{grid-template-columns:1fr}}
+.gc{display:flex;flex-direction:column;gap:14px}
+.grade{display:inline-block;border-radius:4px;font-weight:600;color:#fff;text-align:center}
+.gsm{padding:2px 8px;font-size:11px}.gmd{padding:4px 12px;font-size:13px}.glg{padding:6px 18px;font-size:16px}
+.spill{display:inline-block;border-radius:4px;font-size:11px;font-weight:600;color:#fff;padding:2px 8px}
+.pb{display:flex;align-items:center;gap:8px}
+.pbtr{flex:1;background:var(--bg-secondary);border-radius:99px;overflow:hidden;height:10px}
+.pbfi{height:100%;border-radius:99px;transition:width .5s ease}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--navy);color:#fff;padding:8px 11px;font-weight:600;font-size:11px;text-align:center;white-space:nowrap}
+.tbl th:first-child,.tbl th:nth-child(2){text-align:left}
+.tbl td{padding:9px 11px;border-bottom:1px solid var(--border-light);color:var(--text-primary);text-align:center;vertical-align:middle}
+.tbl td:first-child,.tbl td:nth-child(2){text-align:left}
+.tbl tr:hover td{background:var(--bg-secondary);cursor:pointer}
+.tbl tr:last-child td{border-bottom:none}
+.otag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block}
+.qrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+@media(max-width:600px){.qrow{grid-template-columns:1fr 1fr}}
+.qcard{border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;transition:border-color .2s}
+.qcard:hover{border-color:var(--blue)}
+.qlbl{font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.qperiod{font-size:9px;color:var(--text-hint);font-weight:400}
+.qinp{width:100%;padding:7px 9px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-primary);color:var(--text-primary);margin-bottom:6px;transition:border-color .15s}
+.qinp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.1)}
+.qsel{width:100%;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.qsel:focus{outline:none;border-color:var(--blue)}
+.qscore-val{text-align:center;padding:6px;font-size:14px;font-weight:600;margin-top:6px;border-radius:var(--radius);background:var(--bg-secondary)}
+.icard{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.icard:last-child{margin-bottom:0}
+.ihead{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;flex-wrap:wrap;gap:8px}
+.iname{font-size:14px;font-weight:600}
+.utag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px}
+.qscore-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.qscore-cell{text-align:center;padding:8px 6px;background:var(--bg-secondary);border-radius:var(--radius)}
+.qs-lbl{font-size:10px;color:var(--text-secondary);margin-bottom:3px}
+.qs-val{font-size:15px;font-weight:600}
+.preview-bar{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px;display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.pv-item{text-align:center}
+.pv-val{font-size:20px;font-weight:600}
+.pv-lbl{font-size:10px;color:var(--text-secondary);margin-top:3px}
+.save-btn{padding:10px 26px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--navy);color:#fff;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.save-btn:hover{background:var(--blue)}
+.save-btn:active{transform:scale(.98)}
+.lgnd{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.lgit{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary)}
+.lgdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.rnk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)}
+.rnk:last-child{border-bottom:none}
+.sync-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:var(--radius);margin-bottom:14px;font-size:12px;color:#2e7d32}
+.frow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fbtn{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);transition:all .15s}
+.fbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.sep{width:1px;background:var(--border);align-self:stretch}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;color:#fff;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:all .3s}
+/* 근거자료 (분기별) / 월별 */
+.subsec{margin-top:14px;border-top:1px dashed var(--border);padding-top:13px}
+.subhead{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;flex-wrap:wrap}
+.evid-qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media(max-width:680px){.evid-qgrid{grid-template-columns:1fr}}
+.evid-q{display:flex;flex-direction:column}
+.evid-q-lbl{font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:5px}
+.evid-ta{width:100%;min-height:60px;padding:8px 10px;font-size:12px;font-family:inherit;line-height:1.5;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-primary);color:var(--text-primary);resize:vertical}
+.evid-ta:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.1)}
+.mon-toggle-btn{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer}
+.mon-toggle-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.mon-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+@media(max-width:680px){.mon-grid{grid-template-columns:repeat(3,1fr)}}
+.mon-cell{border:1px solid var(--border-light);border-radius:var(--radius);padding:6px 7px;background:var(--bg-secondary)}
+.mon-lbl{font-size:9px;color:var(--text-secondary);margin-bottom:3px;font-weight:600}
+.mon-inp{width:100%;padding:5px 6px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--bg-primary);color:var(--text-primary)}
+.mon-inp:focus{outline:none;border-color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="app" id="app" style="display:none">
+  <div class="hdr">
+    <div class="htop">
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:3px" id="hdrSub">오일허브코리아여수 (OKYC)</div>
+        <div class="htitle" id="hdrTitle">2026년 MBO 성과지표 관리 시스템</div>
+      </div>
+      <div class="hbadges">
+        <div class="lang-toggle">
+          <button class="lang-btn on" id="btnKO" onclick="setLang('ko')">한국어</button>
+          <button class="lang-btn" id="btnEN" onclick="setLang('en')">English</button>
+        </div>
+        <button class="hbtn" id="btnExport" onclick="exportData()" title="">⬇</button>
+        <button class="hbtn" id="btnImport" onclick="document.getElementById('importFile').click()" title="">⬆</button>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+        <span class="badge badge-white" id="hdrBadge">2026년 연간 관리</span>
+        <span class="badge badge-green" id="savedBadge" style="display:none">✓</span>
+      </div>
+    </div>
+    <div class="tabs" id="tabBar"></div>
+  </div>
+  <div class="body">
+    <div id="tab-overview"></div>
+    <div id="tab-input" class="hidden"></div>
+  </div>
+</div>
+
+<div id="loadScr" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:14px">
+  <div style="font-size:32px">📊</div>
+  <div style="font-size:16px;font-weight:600;color:#1F3864">OKYC MBO 2026</div>
+  <div id="loadMsg" style="font-size:13px;color:#6c757d">구글 시트에서 데이터를 불러오는 중…</div>
+  <div style="font-size:11px;color:#9ca3af">잠시만 기다려 주세요</div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   1. 다국어 사전
+════════════════════════════════════════════ */
+const I18N = {
+  ko: {
+    sysTitle: '2026년 MBO 성과지표 관리 시스템',
+    sysSubtitle: '오일허브코리아여수 (OKYC)',
+    yearBadge: '2026년 연간 관리',
+    tabOverview: '📊 총괄 현황',
+    syncMsg: '구글 시트와 실시간 동기화됩니다. 저장 버튼을 누르면 모든 팀장이 즉시 확인할 수 있습니다. ⬇ 버튼으로 JSON 백업도 가능합니다.',
+    lastSaved: '마지막 저장',
+    kpiAvg: '전사 평균 점수', kpiAvgSub: '입력 팀 기준 가중평균',
+    kpiFinAvg: '재무목표 평균', kpiFinAvgSub: '전사 재무지표 가중평균',
+    kpiKeyAvg: '중점추진 평균', kpiKeyAvgSub: '전사 중점과제 가중평균',
+    kpiAchieve: '기준 달성', kpiAchieveSub: '80점 이상 달성 팀',
+    notInput: '미입력',
+    chartTeamScore: '팀별 MBO 종합점수',
+    chartClickHint: '막대 클릭 → 입력 페이지',
+    chartTypeCompare: '재무 / 중점추진 비교',
+    chartGradeDist: '등급 분포',
+    chartQTrend: '분기별 점수 추이 (Q1~Q4)',
+    chartSummary: '전체 팀 현황 총괄표',
+    filterAll: '전체',
+    colOffice: '사무소', colTeam: '팀명',
+    colFinancial: '재무목표', colKey: '중점추진',
+    colWeighted: '가중평균', colGrade: '등급', colProgress: '진행률',
+    gradeTitles: {S:'탁월',A:'우수',B:'양호',C:'보통',D:'미흡'},
+    offices: {'서울사무소':'서울사무소','여수 본사':'여수 본사'},
+    indTypeFin: '재무목표', indTypeKey: '중점추진',
+    pvFin: '재무목표', pvKey: '중점추진', pvWt: '가중평균',
+    pvNote: '점수 선택 시 즉시 반영 / 저장 버튼으로 기록 보관',
+    inputTitle: '과제별 분기 실적 및 점수 입력',
+    qPeriods: {Q1:'1~3월',Q2:'4~6월',Q3:'7~9월',Q4:'10~12월'},
+    realPlaceholder: '실적 입력',
+    notePlaceholder: '비고',
+    scoreSelect: '점수 선택',
+    scoreOpts: [{v:100,l:'100점 — 탁월'},{v:90,l:'90점 — 우수'},{v:85,l:'85점 — 양호'},{v:80,l:'80점 — 보통'},{v:70,l:'70점 — 미흡'},{v:0,l:'0점 — 미달성'}],
+    saveBtn: '💾 저장하기',
+    saveNote: '저장 후 총괄 현황에 즉시 반영 · 3초 무입력 시 자동저장',
+    saving: '저장 중...', saveOk: '✅ 저장 완료!', saveFail: '❌ 저장 실패',
+    toastOk: '저장 완료! 총괄 현황에 반영됩니다', toastFail: '저장에 실패했습니다',
+    autoSavedBadge: '✓ 자동저장됨', savedBadge: '✓ 저장됨',
+    wtLabel: '가중치', targetLabel: '목표',
+    avgLabel: '점 평균',
+    pointSuffix: '점',
+    noData: '—',
+    lineRef80: '80점 기준', lineRef90: '90점 기준',
+    evidTitle: '분기별 근거자료',
+    evidHint: '실적 근거·산출 내역을 분기별로 기록 (자동저장)',
+    evidPlaceholder: '실적 근거, 산출 내역, 참고사항 등을 입력하세요',
+    monToggle: '월별 실적 입력',
+    monHint: '점수는 분기 단위로 평가됩니다. 월별 칸은 추이 관찰용 선택 입력입니다.',
+    months: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+    monShort: ['1','2','3','4','5','6','7','8','9','10','11','12'],
+    trendQ: '분기별', trendM: '월별',
+    trendUnit: '추이 단위',
+    monValPlaceholder: '값',
+    exportTitle: '데이터 내보내기 (JSON 백업)',
+    importTitle: '데이터 가져오기 (JSON 불러오기)',
+    importOk: '데이터를 불러왔습니다',
+    importFail: '파일 형식이 올바르지 않습니다',
+    importConfirm: '현재 입력된 데이터를 파일 내용으로 덮어씁니다. 계속하시겠습니까?',
+  },
+  en: {
+    sysTitle: '2026 MBO Performance Indicator Management System',
+    sysSubtitle: 'Oil Hub Korea Yeosu (OKYC)',
+    yearBadge: '2026 Annual Management',
+    tabOverview: '📊 Overview',
+    syncMsg: 'Synced with Google Sheets in real time. Press Save to share updates with all team leads instantly. Use ⬇ for a JSON backup.',
+    lastSaved: 'Last saved',
+    kpiAvg: 'Company Average', kpiAvgSub: 'Weighted avg of entered teams',
+    kpiFinAvg: 'Financial Avg', kpiFinAvgSub: 'Company-wide financial weighted avg',
+    kpiKeyAvg: 'Key Initiative Avg', kpiKeyAvgSub: 'Company-wide initiative weighted avg',
+    kpiAchieve: 'Teams on Target', kpiAchieveSub: 'Teams scoring 80+',
+    notInput: 'Not entered',
+    chartTeamScore: 'MBO Score by Team',
+    chartClickHint: 'Click bar → Input page',
+    chartTypeCompare: 'Financial vs. Key Initiatives',
+    chartGradeDist: 'Grade Distribution',
+    chartQTrend: 'Quarterly Score Trend (Q1~Q4)',
+    chartSummary: 'Company-Wide MBO Summary',
+    filterAll: 'All',
+    colOffice: 'Office', colTeam: 'Team',
+    colFinancial: 'Financial', colKey: 'Key Initiative',
+    colWeighted: 'Weighted Avg', colGrade: 'Grade', colProgress: 'Progress',
+    gradeTitles: {S:'Exceptional',A:'Excellent',B:'Good',C:'Average',D:'Needs Improvement'},
+    offices: {'서울사무소':'Seoul Office','여수 본사':'Yeosu HQ'},
+    indTypeFin: 'Financial Goal', indTypeKey: 'Key Initiative',
+    pvFin: 'Financial', pvKey: 'Key Initiative', pvWt: 'Weighted Avg',
+    pvNote: 'Score updates instantly · Save to keep record',
+    inputTitle: 'Quarterly Results & Score Input by Indicator',
+    qPeriods: {Q1:'Jan~Mar',Q2:'Apr~Jun',Q3:'Jul~Sep',Q4:'Oct~Dec'},
+    realPlaceholder: 'Enter result',
+    notePlaceholder: 'Remarks',
+    scoreSelect: 'Select score',
+    scoreOpts: [{v:100,l:'100pts — Exceptional'},{v:90,l:'90pts — Excellent'},{v:85,l:'85pts — Good'},{v:80,l:'80pts — Average'},{v:70,l:'70pts — Below avg'},{v:0,l:'0pts — Not achieved'}],
+    saveBtn: '💾 Save',
+    saveNote: 'Saved data is reflected in Overview · Auto-saves after 3s idle',
+    saving: 'Saving...', saveOk: '✅ Saved!', saveFail: '❌ Save Failed',
+    toastOk: 'Saved! Reflected in Overview.', toastFail: 'Failed to save.',
+    autoSavedBadge: '✓ Auto-saved', savedBadge: '✓ Saved',
+    wtLabel: 'Weight', targetLabel: 'Target',
+    avgLabel: 'pt avg',
+    pointSuffix: 'pts',
+    noData: '—',
+    lineRef80: '80pt ref', lineRef90: '90pt ref',
+    evidTitle: 'Quarterly Evidence',
+    evidHint: 'Record performance basis & calculation by quarter (auto-saved)',
+    evidPlaceholder: 'Enter performance basis, calculation details, notes, etc.',
+    monToggle: 'Monthly result entry',
+    monHint: 'Scores are evaluated quarterly. Monthly fields are optional, for trend tracking only.',
+    months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    monShort: ['1','2','3','4','5','6','7','8','9','10','11','12'],
+    trendQ: 'Quarterly', trendM: 'Monthly',
+    trendUnit: 'Trend unit',
+    monValPlaceholder: 'Value',
+    exportTitle: 'Export data (JSON backup)',
+    importTitle: 'Import data (load JSON)',
+    importOk: 'Data loaded successfully',
+    importFail: 'Invalid file format',
+    importConfirm: 'This will overwrite current data with the file contents. Continue?',
+  }
+};
+
+/* ════════════════════════════════════════════
+   2. 팀/지표 데이터 (이름 이중 언어)
+════════════════════════════════════════════ */
+const TEAMS_INIT = [
+  {ko:'경영지원팀', en:'Management Support', 사무소:'서울사무소', 지표:[
+    {ko:'영업이익', en:'Operating Profit', 유형:'fin', 가중:50, 목표:'KRW 25.91B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'인사운영 최적화', en:'HR Process Optimization', 유형:'key', 가중:25, 목표:'3건 / 3 cases', 단위:'건', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'주주사 소통 강화', en:'Shareholder Communication', 유형:'key', 가중:25, 목표:'4.25점 / 4.25pts', 단위:'점', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'마케팅팀', en:'Marketing', 사무소:'서울사무소', 지표:[
+    {ko:'매출액', en:'Revenue', 유형:'fin', 가중:50, 목표:'KRW 67.22B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'평균 탱크계약률', en:'Avg. Tank Contract Rate', 유형:'key', 가중:50, 목표:'91.8%', 단위:'%', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'기획재경팀', en:'Planning & Finance', 사무소:'서울사무소', 지표:[
+    {ko:'영업이익', en:'Operating Profit', 유형:'fin', 가중:50, 목표:'KRW 25.91B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'재무지표 이익개선', en:'Profit Improvement', 유형:'key', 가중:50, 목표:'KRW 400M reduction', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'재무팀', en:'Finance', 사무소:'서울사무소', 지표:[
+    {ko:'영업이익', en:'Operating Profit', 유형:'fin', 가중:50, 목표:'KRW 25.91B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'순금융비용 절감', en:'Net Finance Cost Reduction', 유형:'key', 가중:50, 목표:'KRW 250M reduction', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'관리팀', en:'Administration', 사무소:'여수 본사', 지표:[
+    {ko:'영업이익', en:'Operating Profit', 유형:'fin', 가중:50, 목표:'KRW 25.91B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'계약관리 절감률', en:'Contract Cost Savings Rate', 유형:'key', 가중:50, 목표:'5% savings', 단위:'%', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'운영계획팀', en:'Operations Planning', 사무소:'여수 본사', 지표:[
+    {ko:'부가서비스 매출', en:'Value-added Service Revenue', 유형:'fin', 가중:50, 목표:'KRW 5B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'BSS 출하작업', en:'BSS Loading Operations', 유형:'key', 가중:25, 목표:'5 cases', 단위:'건', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'고객만족도', en:'Customer Satisfaction', 유형:'key', 가중:15, 목표:'4.25pts', 단위:'점', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'세관 법규수행', en:'Customs Compliance', 유형:'key', 가중:10, 목표:'Grade A', 단위:'등급', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'운영팀', en:'Operations', 사무소:'여수 본사', 지표:[
+    {ko:'부가서비스 매출', en:'Value-added Service Revenue', 유형:'fin', 가중:50, 목표:'KRW 5B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'3정5S 구축', en:'3S/5S System Implementation', 유형:'key', 가중:50, 목표:'85pts', 단위:'점', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'안전팀', en:'Safety', 사무소:'여수 본사', 지표:[
+    {ko:'영업이익', en:'Operating Profit', 유형:'fin', 가중:50, 목표:'KRW 25.91B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'산업재해 예방(무재해)', en:'Zero Industrial Accident', 유형:'key', 가중:50, 목표:'0 cases', 단위:'건', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+  {ko:'시설팀', en:'Facilities', 사무소:'여수 본사', 지표:[
+    {ko:'매출액', en:'Revenue', 유형:'fin', 가중:50, 목표:'KRW 67.22B', 단위:'억원', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+    {ko:'TF-50 공사 무재해', en:'TF-50 Construction Zero Accident', 유형:'key', 가중:50, 목표:'0 cases', 단위:'건', 분기:{Q1:{실적:'',점수:null,비고:''},Q2:{실적:'',점수:null,비고:''},Q3:{실적:'',점수:null,비고:''},Q4:{실적:'',점수:null,비고:''}}},
+  ]},
+];
+
+/* ════════════════════════════════════════════
+   3. 앱 상태
+════════════════════════════════════════════ */
+const QS=['Q1','Q2','Q3','Q4'];
+const GC={S:{c:'#7B2D8B'},A:{c:'#1B873F'},B:{c:'#1565C0'},C:{c:'#D97706'},D:{c:'#DC2626'}};
+const OC={'서울사무소':'#4472C4','여수 본사':'#5B9E4D'};
+const LC=['#4472C4','#ED7D31','#A9D18E','#FFC000','#5B9BD5','#FF7F7F','#9966CC','#1B873F','#7B2D8B'];
+const SK='OKYC_MBO_2026_v3';
+
+let DATA=JSON.parse(JSON.stringify(TEAMS_INIT));
+let CUR_IDX=0;
+let LANG='ko';
+let CHARTS={};
+let AUTO_TIMER=null;
+let OFF_FILTER='all';
+let TREND_MODE='q'; // 'q'=분기, 'm'=월별
+
+/* 신규 필드 보강: 기존 데이터에 근거(분기별 텍스트)/월별 필드가 없으면 생성 */
+function ensureFields(data){
+  data.forEach(t=>t.지표.forEach(ind=>{
+    // 근거자료: 분기별 텍스트 서술 방식
+    if(!ind.근거||typeof ind.근거!=='object'||Array.isArray(ind.근거)){
+      ind.근거={Q1:'',Q2:'',Q3:'',Q4:''};
+    }else{
+      QS.forEach(q=>{if(ind.근거[q]===undefined)ind.근거[q]='';});
+    }
+    delete ind.근거자료; // 구버전 배열 필드 제거
+    if(!ind.월별||typeof ind.월별!=='object'){
+      ind.월별={};for(let m=1;m<=12;m++)ind.월별['M'+m]='';
+    }else{
+      for(let m=1;m<=12;m++)if(ind.월별['M'+m]===undefined)ind.월별['M'+m]='';
+    }
+  }));
+  return data;
+}
+ensureFields(DATA);
+
+/* ── 헬퍼 ── */
+const T=()=>I18N[LANG];
+const tname=(t)=>LANG==='en'?t.en:t.ko;
+const tind=(i)=>LANG==='en'?i.en:i.ko;
+const toff=(o)=>T().offices[o]||o;
+const ttype=(type)=>type==='fin'?T().indTypeFin:T().indTypeKey;
+function sc(s){if(s===null||s===undefined)return'#888';if(s>=100)return'#70AD47';if(s>=90)return'#2E75B6';if(s>=80)return'#FFC000';return'#EF4444';}
+function grade(s){if(s===null||s===undefined)return'-';if(s>=95)return'S';if(s>=90)return'A';if(s>=85)return'B';if(s>=80)return'C';return'D';}
+function gb(g,sz='gmd'){const c=GC[g]||{c:'#888'};return`<span class="grade ${sz}" style="background:${c.c}">${g}</span>`;}
+function pb(s,h=10){
+  if(s===null||s===undefined)return`<span style="font-size:11px;color:var(--text-secondary)">${T().notInput}</span>`;
+  const p=Math.min(100,Math.max(0,s));const c=sc(s);
+  return`<div class="pb"><div class="pbtr" style="height:${h}px"><div class="pbfi" style="width:${p}%;background:${c}"></div></div><span style="font-size:11px;font-weight:600;color:${c};min-width:34px;text-align:right">${s}${T().pointSuffix}</span></div>`;
+}
+function showToast(msg,ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=ok?'#1B873F':'#DC2626';
+  t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2500);
+}
+function dc(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
+
+/* ── 점수 계산 ── */
+function teamScore(t){
+  const a=[];t.지표.forEach(ind=>{const qs=Object.values(ind.분기).filter(q=>q.점수!==null);if(qs.length){const avg=qs.reduce((s,q)=>s+q.점수,0)/qs.length;a.push({s:avg,w:ind.가중});}});
+  if(!a.length)return null;const tw=a.reduce((s,x)=>s+x.w,0);
+  return Math.round(a.reduce((s,x)=>s+x.s*x.w,0)/tw*10)/10;
+}
+function typeScore(t,type){
+  const a=[];t.지표.filter(i=>i.유형===type).forEach(ind=>{const qs=Object.values(ind.분기).filter(q=>q.점수!==null);if(qs.length){const avg=qs.reduce((s,q)=>s+q.점수,0)/qs.length;a.push({s:avg,w:ind.가중});}});
+  if(!a.length)return null;const tw=a.reduce((s,x)=>s+x.w,0);
+  return Math.round(a.reduce((s,x)=>s+x.s*x.w,0)/tw*10)/10;
+}
+function indAvg(ind){const qs=Object.values(ind.분기).filter(q=>q.점수!==null);if(!qs.length)return null;return Math.round(qs.reduce((s,q)=>s+q.점수,0)/qs.length*10)/10;}
+function qTeamScore(t,q){
+  const inds=t.지표.filter(i=>i.분기[q].점수!==null);if(!inds.length)return null;
+  const tw=inds.reduce((s,i)=>s+i.가중,0);
+  return Math.round(inds.reduce((s,i)=>s+i.분기[q].점수*i.가중,0)/tw*10)/10;
+}
+/* 월→분기 매핑 (1~3월=Q1 ...) */
+const MONTH_Q=['Q1','Q1','Q1','Q2','Q2','Q2','Q3','Q3','Q3','Q4','Q4','Q4'];
+/* 월별 팀 종합점수: 해당 월이 속한 분기의 확정 점수를 사용 */
+function mTeamScore(t,mIdx){return qTeamScore(t,MONTH_Q[mIdx]);}
+
+/* ── 저장/로드 ──
+   ┌─────────────────────────────────────────────────────────────┐
+   │ 【연동 확장 지점】                                            │
+   │ 현재: 브라우저 localStorage 저장                              │
+   │ 다음 단계: 아래 STORAGE 어댑터의 save/load만 교체하면          │
+   │   구글 시트(Apps Script) 또는 깃허브(GitHub API) 연동 가능.   │
+   │ 데이터 직렬화(serializeData)/적용(applyData)은 그대로 재사용. │
+   └─────────────────────────────────────────────────────────────┘ */
+
+/* 저장용 데이터 직렬화 (임시 UI 상태 _monOpen 제외) */
+function serializeData(){
+  return DATA.map(t=>({...t,지표:t.지표.map(ind=>{const{_monOpen,...rest}=ind;return rest;})}));
+}
+/* 저장된 데이터를 현재 DATA에 병합 적용 */
+function applyData(parsed){
+  if(!(parsed&&Array.isArray(parsed)&&parsed.length===TEAMS_INIT.length))return false;
+  parsed.forEach((pt,i)=>{if(!DATA[i])return;pt.지표&&pt.지표.forEach((pi,j)=>{
+    if(DATA[i].지표[j]){
+      DATA[i].지표[j].분기=pi.분기||DATA[i].지표[j].분기;
+      if(pi.근거&&typeof pi.근거==='object'&&!Array.isArray(pi.근거))DATA[i].지표[j].근거=pi.근거;
+      if(pi.월별&&typeof pi.월별==='object')DATA[i].지표[j].월별=pi.월별;
+    }
+  });});
+  ensureFields(DATA);
+  return true;
+}
+
+/* ── Google Apps Script 연동 설정 ── */
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwwoWTHP_YikWiBeO7j0O6MgF1Xj2oDrca0a-nGKUTk5HdBRq_DfLaNPHo7uZz8nr6f/exec';
+
+/* 동기 상태 표시 */
+function setSyncStatus(state){
+  /* state: 'syncing' | 'ok' | 'local' | 'error' */
+  const b=document.getElementById('savedBadge');
+  const map={syncing:'⟳ 동기화 중…',ok:'✓ 저장됨',local:'📴 로컬 저장',error:'⚠ 저장 실패'};
+  const col={syncing:'#F59E0B',ok:'#1B873F',local:'#6B7280',error:'#DC2626'};
+  if(!b)return;
+  b.textContent=map[state]||state;
+  b.style.background=col[state]||'#6B7280';
+  b.style.display='inline';
+  if(state==='ok'||state==='local')setTimeout(()=>{b.style.display='none';},3000);
+}
+
+/* 스토리지 어댑터 — Google Sheets 양방향 연동 */
+const STORAGE={
+  /* 저장: localStorage 캐시 → Google Sheets 비동기 전송 */
+  async save(payload){
+    const body=JSON.stringify(payload);
+    /* 1. 즉시 로컬 캐시 저장 (오프라인 대비) */
+    localStorage.setItem(SK,body);
+    localStorage.setItem(SK+'_lang',LANG);
+    const ts=new Date().toLocaleString(LANG==='ko'?'ko-KR':'en-US');
+    localStorage.setItem(SK+'_time',ts);
+    /* 2. 구글 시트에 비동기 전송 */
+    setSyncStatus('syncing');
+    try{
+      await fetch(SCRIPT_URL,{
+        method:'POST',
+        mode:'no-cors',      /* Apps Script는 no-cors 필요 */
+        headers:{'Content-Type':'text/plain'},
+        body:body
+      });
+      setSyncStatus('ok');
+      return true;
+    }catch(e){
+      /* 네트워크 오류 시 로컬 저장만 유지 */
+      setSyncStatus('local');
+      return false;
+    }
+  },
+  /* 로드: Google Sheets 우선, 실패 시 localStorage 폴백 */
+  async load(){
+    try{
+      const res=await fetch(SCRIPT_URL+'?t='+Date.now()); /* 캐시 방지 */
+      const text=await res.text();
+      if(text&&text!=='null'&&text!==''){
+        const parsed=JSON.parse(text);
+        /* 구글에서 불러온 데이터를 로컬 캐시에도 저장 */
+        localStorage.setItem(SK,JSON.stringify(parsed));
+        return parsed;
+      }
+    }catch(e){/* 구글 연결 실패 → 로컬 폴백 */}
+    const raw=localStorage.getItem(SK);
+    return raw?JSON.parse(raw):null;
+  },
+  lang(){return localStorage.getItem(SK+'_lang');},
+  time(){return localStorage.getItem(SK+'_time');},
+};
+
+/* saveLocal: 비동기 저장 (async) */
+async function saveLocal(){
+  try{return await STORAGE.save(serializeData());}catch(e){return false;}
+}
+
+/* loadLocal: 비동기 로드 (async) */
+async function loadLocal(){
+  try{
+    const sl=STORAGE.lang();
+    if(sl&&(sl==='ko'||sl==='en'))LANG=sl;
+    const parsed=await STORAGE.load();
+    if(!parsed)return false;
+    return applyData(parsed);
+  }catch(e){}return false;
+}
+
+/* ── JSON 내보내기 / 가져오기 (깃허브 백업·이전용) ── */
+function exportData(){
+  const payload={version:'v4',exportedAt:new Date().toISOString(),data:serializeData()};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date(),pad=n=>String(n).padStart(2,'0');
+  a.href=url;a.download=`OKYC_MBO_2026_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(T().exportTitle,true);
+}
+function importData(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  const tx=T();
+  if(!confirm(tx.importConfirm)){input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const arr=Array.isArray(obj)?obj:obj.data;
+      if(applyData(arr)){
+        await saveLocal();
+        if(!document.getElementById('tab-overview').classList.contains('hidden'))renderOv();
+        else renderInp(CUR_IDX);
+        showToast(tx.importOk,true);
+      }else{showToast(tx.importFail,false);}
+    }catch(err){showToast(tx.importFail,false);}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ── 언어 전환 ── */
+function setLang(lang){
+  LANG=lang;
+  document.getElementById('btnKO').classList.toggle('on',lang==='ko');
+  document.getElementById('btnEN').classList.toggle('on',lang==='en');
+  document.getElementById('hdrTitle').textContent=T().sysTitle;
+  document.getElementById('hdrSub').textContent=T().sysSubtitle;
+  document.getElementById('hdrBadge').textContent=T().yearBadge;
+  const be=document.getElementById('btnExport'),bi=document.getElementById('btnImport');
+  if(be)be.title=T().exportTitle;if(bi)bi.title=T().importTitle;
+  buildTabs();
+  if(!document.getElementById('tab-overview').classList.contains('hidden'))renderOv();
+  else renderInp(CUR_IDX);
+  saveLocal();
+}
+
+/* ═══ Chart.js 기준선 플러그인 ═══ */
+Chart.register({id:'lines',beforeDraw(ch){
+  const a=ch.options._lines;if(!a)return;
+  const ctx=ch.ctx,{top,bottom,left,right}=ch.chartArea,xs=ch.scales.x,ys=ch.scales.y;
+  a.forEach(x=>{ctx.save();ctx.strokeStyle=x.c||'#ccc';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();
+    if(x.ax==='x'){const px=xs.getPixelForValue(x.v);ctx.moveTo(px,top);ctx.lineTo(px,bottom);}
+    else{const py=ys.getPixelForValue(x.v);ctx.moveTo(left,py);ctx.lineTo(right,py);}
+    ctx.stroke();ctx.restore();});
+}});
+
+/* ═══ 탭 빌드 ═══ */
+function buildTabs(){
+  const bar=document.getElementById('tabBar');bar.innerHTML='';
+  const tabs=[{id:'overview',label:T().tabOverview},...DATA.map((t,i)=>({id:'team-'+i,label:tname(t)}))];
+  tabs.forEach((tab,i)=>{
+    const b=document.createElement('button');
+    b.className='tab'+(document.getElementById('tab-overview')&&!document.getElementById('tab-overview').classList.contains('hidden')&&i===0?' on':i===CUR_IDX+1&&!document.getElementById('tab-overview').classList.contains('hidden')?'':i===CUR_IDX+1?' on':'');
+    if(i===0&&!document.getElementById('tab-input').classList.contains('hidden'));
+    b.id='tbtn-'+tab.id;b.textContent=tab.label;
+    b.onclick=()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+      if(tab.id==='overview'){showOv();}
+      else{const ti=parseInt(tab.id.split('-')[1]);CUR_IDX=ti;showInp(ti);}
+    };
+    bar.appendChild(b);
+  });
+  const activeId=document.getElementById('tab-input').classList.contains('hidden')?'overview':'team-'+CUR_IDX;
+  const activeBtn=document.getElementById('tbtn-'+activeId);
+  if(activeBtn){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));activeBtn.classList.add('on');}
+}
+
+function showOv(){
+  document.getElementById('tab-input').classList.add('hidden');
+  document.getElementById('tab-overview').classList.remove('hidden');
+  renderOv();
+}
+function showInp(idx){
+  document.getElementById('tab-overview').classList.add('hidden');
+  document.getElementById('tab-input').classList.remove('hidden');
+  renderInp(idx);
+}
+function gotoTeam(idx){
+  CUR_IDX=idx;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  const btn=document.getElementById('tbtn-team-'+idx);if(btn)btn.classList.add('on');
+  showInp(idx);
+}
+
+/* ═══ 총괄 현황 렌더링 ═══ */
+function renderOv(){
+  const ov=document.getElementById('tab-overview');
+  const sc2=DATA.map(t=>({...t,ws:teamScore(t),fs:typeScore(t,'fin'),ms:typeScore(t,'key')}));
+  const ws2=sc2.filter(t=>t.ws!==null);
+  const avg=ws2.length?(ws2.reduce((s,t)=>s+t.ws,0)/ws2.length).toFixed(1):null;
+  const fs2=sc2.filter(t=>t.fs!==null);
+  const finAvg=fs2.length?(fs2.reduce((s,t)=>s+t.fs,0)/fs2.length).toFixed(1):null;
+  const ms2=sc2.filter(t=>t.ms!==null);
+  const keyAvg=ms2.length?(ms2.reduce((s,t)=>s+t.ms,0)/ms2.length).toFixed(1):null;
+  const ab80=ws2.filter(t=>t.ws>=80).length;
+  const tx=T();
+  const ls=STORAGE.time();
+
+  ov.innerHTML=`
+  <div class="sync-bar">
+    <span style="width:8px;height:8px;border-radius:50%;background:#1B873F;display:inline-block;flex-shrink:0"></span>
+    ${tx.syncMsg}
+    <span style="margin-left:auto;font-size:11px;white-space:nowrap">${tx.lastSaved}: ${ls||tx.noData}</span>
+  </div>
+  <div class="krow">
+    <div class="kpi"><div class="klbl">📊 ${tx.kpiAvg}</div><div class="kval" style="color:#1565C0">${avg?avg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiAvgSub}</div></div>
+    <div class="kpi"><div class="klbl">💰 ${tx.kpiFinAvg}</div><div class="kval" style="color:#D97706">${finAvg?finAvg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiFinAvgSub}</div></div>
+    <div class="kpi"><div class="klbl">🎯 ${tx.kpiKeyAvg}</div><div class="kval" style="color:#2E75B6">${keyAvg?keyAvg+tx.pointSuffix:tx.notInput}</div><div class="ksub">${tx.kpiKeyAvgSub}</div></div>
+    <div class="kpi"><div class="klbl">✅ ${tx.kpiAchieve}</div><div class="kval" style="color:#1B873F">${ab80} / ${DATA.length}</div><div class="ksub">${tx.kpiAchieveSub}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="ct">📊 ${tx.chartTeamScore} <span style="font-size:11px;font-weight:400;color:var(--text-secondary)">(${tx.chartClickHint})</span></div>
+      <div class="frow" id="offFilter"></div>
+      <div style="position:relative;width:100%;height:${Math.max(240,DATA.length*36+60)}px"><canvas id="ovBar"></canvas></div>
+      <div class="lgnd">${Object.entries(GC).map(([g,c])=>`<div class="lgit"><div class="lgdot" style="background:${c.c}"></div>${g} · ${tx.gradeTitles[g]}</div>`).join('')}</div>
+    </div>
+    <div class="gc">
+      <div class="card" style="flex:1">
+        <div class="ct">📉 ${tx.chartTypeCompare}</div>
+        <div style="position:relative;width:100%;height:160px"><canvas id="typeBar"></canvas></div>
+        <div class="lgnd" style="margin-top:8px">
+          <div class="lgit"><div class="lgdot" style="background:#FFC000"></div>${tx.colFinancial}</div>
+          <div class="lgit"><div class="lgdot" style="background:#2E75B6"></div>${tx.colKey}</div>
+        </div>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="ct">🎯 ${tx.chartGradeDist}</div>
+        <div id="gradeDist"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">📈 ${tx.chartQTrend}
+      <span style="margin-left:auto;display:inline-flex;gap:4px" id="trendToggle">
+        <button class="fbtn${TREND_MODE==='q'?' on':''}" id="trBtnQ" onclick="setTrendMode('q')">${tx.trendQ}</button>
+        <button class="fbtn${TREND_MODE==='m'?' on':''}" id="trBtnM" onclick="setTrendMode('m')">${tx.trendM}</button>
+      </span>
+    </div>
+    <div style="position:relative;width:100%;height:250px"><canvas id="qTrend"></canvas></div>
+    <div class="lgnd" id="trendLgnd"></div>
+  </div>
+  <div class="card">
+    <div class="ct">📋 ${tx.chartSummary}</div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr>
+          <th>${tx.colOffice}</th><th>${tx.colTeam}</th>
+          <th>${tx.colFinancial}</th><th>${tx.colKey}</th>
+          <th>${tx.colWeighted}</th><th>${tx.colGrade}</th>
+          <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
+          <th style="min-width:130px">${tx.colProgress}</th>
+        </tr></thead>
+        <tbody id="ovTbody"></tbody>
+      </table>
+    </div>
+  </div>`;
+
+  /* 필터 버튼 */
+  const ff=document.getElementById('offFilter');
+  [{k:'all',l:tx.filterAll},{k:'서울사무소',l:toff('서울사무소')},{k:'여수 본사',l:toff('여수 본사')}].forEach(o=>{
+    const b=document.createElement('button');b.className='fbtn'+(o.k===OFF_FILTER?' on':'');b.textContent=o.l;
+    b.onclick=()=>{OFF_FILTER=o.k;document.querySelectorAll('#offFilter .fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderOvBar(sc2);};
+    ff.appendChild(b);
+  });
+
+  /* 총괄표 */
+  document.getElementById('ovTbody').innerHTML=sc2.map((t,i)=>{
+    const oc=OC[t.사무소];const g=grade(t.ws);
+    const qs=QS.map(q=>qTeamScore(t,q));
+    return`<tr onclick="gotoTeam(${i})">
+      <td><span class="otag" style="background:${oc}22;color:${oc}">${toff(t.사무소)}</span></td>
+      <td style="font-weight:600">${tname(t)}</td>
+      <td>${t.fs!==null?`<span class="spill" style="background:${sc(t.fs)}">${t.fs}${tx.pointSuffix}</span>`:`<span style="color:#aaa;font-size:11px">${tx.noData}</span>`}</td>
+      <td>${t.ms!==null?`<span class="spill" style="background:${sc(t.ms)}">${t.ms}${tx.pointSuffix}</span>`:`<span style="color:#aaa;font-size:11px">${tx.noData}</span>`}</td>
+      <td style="font-size:14px;font-weight:600;color:${t.ws!==null?GC[g]?.c:'#aaa'}">${t.ws!==null?t.ws:tx.noData}</td>
+      <td>${t.ws!==null?gb(g,'gsm'):`<span style="font-size:11px;color:#aaa">${tx.noData}</span>`}</td>
+      ${qs.map(q=>q!==null?`<td><span class="spill" style="background:${sc(q)}">${q}</span></td>`:`<td><span style="color:#aaa;font-size:11px">${tx.noData}</span></td>`).join('')}
+      <td>${t.ws!==null?pb(t.ws):`<span style="font-size:11px;color:#aaa">${tx.notInput}</span>`}</td>
+    </tr>`;
+  }).join('');
+
+  renderOvBar(sc2);renderTypeBar(sc2);renderGradeDist(sc2);renderQTrend(sc2);
+}
+
+function renderOvBar(sc2){
+  dc('ovBar');
+  const fil=OFF_FILTER==='all'?sc2:sc2.filter(t=>t.사무소===OFF_FILTER);
+  const srt=[...fil].sort((a,b)=>(b.ws||0)-(a.ws||0));
+  const canvas=document.getElementById('ovBar');if(!canvas)return;
+  canvas.parentElement.style.height=Math.max(200,srt.length*36+60)+'px';
+  CHARTS.ovBar=new Chart(canvas,{
+    type:'bar',
+    data:{labels:srt.map(t=>tname(t)),datasets:[{
+      label:'MBO',data:srt.map(t=>t.ws||0),
+      backgroundColor:srt.map(t=>(GC[grade(t.ws)]?.c||'#888')+'BB'),
+      borderColor:srt.map(t=>GC[grade(t.ws)]?.c||'#888'),
+      borderWidth:1,borderRadius:4,borderSkipped:false,
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      scales:{x:{min:0,max:100,ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw}${T().pointSuffix} (${grade(srt[ctx.dataIndex].ws)})`}}},
+      _lines:[{ax:'x',v:80,c:'#FFC000'},{ax:'x',v:90,c:'#70AD47'}],
+      onClick:(e,els)=>{if(els.length)gotoTeam(DATA.findIndex(t=>tname(t)===srt[els[0].index].en||tname(t)===srt[els[0].index].ko));}
+    }
+  });
+}
+
+function renderTypeBar(sc2){
+  dc('typeBar');const canvas=document.getElementById('typeBar');if(!canvas)return;
+  const tx=T();
+  CHARTS.typeBar=new Chart(canvas,{
+    type:'bar',
+    data:{labels:sc2.map(t=>tname(t)),datasets:[
+      {label:tx.colFinancial,data:sc2.map(t=>t.fs||0),backgroundColor:'#FFC00077',borderColor:'#FFC000',borderWidth:1,borderRadius:3},
+      {label:tx.colKey,data:sc2.map(t=>t.ms||0),backgroundColor:'#2E75B677',borderColor:'#2E75B6',borderWidth:1,borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:0,max:100,ticks:{font:{size:9}}},x:{ticks:{font:{size:9},maxRotation:40}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    }
+  });
+}
+
+function renderGradeDist(sc2){
+  const tx=T();
+  const cnt={S:0,A:0,B:0,C:0,D:0};const noData={n:0};
+  sc2.forEach(t=>t.ws!==null?cnt[grade(t.ws)]++:noData.n++);
+  const el=document.getElementById('gradeDist');if(!el)return;
+  let html=Object.entries(cnt).filter(([,v])=>v>0).map(([g,v])=>{
+    const c=GC[g]?.c||'#999';const p=Math.round(v/DATA.length*100);
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+      <span class="grade gsm" style="background:${c};min-width:34px;text-align:center">${g}</span>
+      <span style="font-size:10px;color:var(--text-secondary);width:72px">${tx.gradeTitles[g]}</span>
+      <div class="pbtr" style="flex:1;height:10px"><div class="pbfi" style="width:${p}%;background:${c}"></div></div>
+      <span style="font-size:11px;color:var(--text-secondary);min-width:22px">${v}</span></div>`;
+  }).join('');
+  if(noData.n>0)html+=`<div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${tx.notInput}: ${noData.n}</div>`;
+  el.innerHTML=html;
+}
+
+function setTrendMode(m){
+  TREND_MODE=m;
+  const bq=document.getElementById('trBtnQ'),bm=document.getElementById('trBtnM');
+  if(bq)bq.classList.toggle('on',m==='q');
+  if(bm)bm.classList.toggle('on',m==='m');
+  const sc2=DATA.map(t=>({...t,ws:teamScore(t),fs:typeScore(t,'fin'),ms:typeScore(t,'key')}));
+  renderQTrend(sc2);
+}
+
+function renderQTrend(sc2){
+  dc('qTrend');const canvas=document.getElementById('qTrend');if(!canvas)return;
+  const tx=T();
+  const isM=TREND_MODE==='m';
+  const labels=isM?tx.months:QS;
+  CHARTS.qTrend=new Chart(canvas,{
+    type:'line',
+    data:{labels:labels,datasets:sc2.map((t,i)=>({
+      label:tname(t),
+      data:isM?tx.months.map((_,m)=>mTeamScore(t,m)):QS.map(q=>qTeamScore(t,q)),
+      borderColor:LC[i],backgroundColor:LC[i]+'22',borderWidth:2,
+      pointRadius:isM?2.5:4,tension:isM?0.25:0.3,spanGaps:true,
+      stepped:isM?false:false,
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:0,max:100,ticks:{font:{size:10}}},x:{ticks:{font:{size:isM?10:12}}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>ctx.raw!==null?` ${ctx.dataset.label}: ${ctx.raw}${T().pointSuffix}`:` ${ctx.dataset.label}: ${T().notInput}`}}},
+      _lines:[{ax:'y',v:80,c:'#FFC000'},{ax:'y',v:90,c:'#70AD47'}]
+    }
+  });
+  const lgnd=document.getElementById('trendLgnd');
+  if(lgnd)lgnd.innerHTML=sc2.map((t,i)=>`<div class="lgit"><div class="lgdot" style="background:${LC[i]}"></div>${tname(t)}</div>`).join('')
+    +(isM?`<div class="lgit" style="color:var(--text-hint);width:100%;margin-top:4px">※ ${tx.monHint}</div>`:'');
+}
+
+/* ═══ 근거자료 / 월별 블록 ═══ */
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function evidenceBlock(idx,iIdx,ind){
+  const tx=T();
+  const cells=QS.map(q=>{
+    const v=ind.근거[q]||'';
+    return`<div class="evid-q">
+      <div class="evid-q-lbl">${q} <span style="font-weight:400;color:var(--text-hint)">${tx.qPeriods[q]}</span></div>
+      <textarea class="evid-ta" id="ev-${idx}-${iIdx}-${q}" placeholder="${tx.evidPlaceholder}"
+        oninput="onEvidChange(${idx},${iIdx},'${q}')">${esc(v)}</textarea>
+    </div>`;
+  }).join('');
+  return`<div class="subsec">
+    <div class="subhead">📁 ${tx.evidTitle}
+      <span style="font-weight:400;color:var(--text-hint);font-size:10px">${tx.evidHint}</span>
+    </div>
+    <div class="evid-qgrid">${cells}</div>
+  </div>`;
+}
+
+function monthlyBlock(idx,iIdx,ind){
+  const tx=T();
+  const open=!!ind._monOpen;
+  const cells=open?`<div class="mon-grid">`+tx.months.map((mn,m)=>{
+    const key='M'+(m+1);const v=ind.월별[key]||'';
+    return`<div class="mon-cell">
+      <div class="mon-lbl">${mn}</div>
+      <input class="mon-inp" type="text" value="${esc(v)}" placeholder="${tx.monValPlaceholder}"
+        oninput="onMonChange(${idx},${iIdx},${m+1})">
+    </div>`;
+  }).join('')+`</div><div style="font-size:10px;color:var(--text-hint);margin-top:8px">※ ${tx.monHint}</div>`:'';
+  return`<div class="subsec" id="mon-sub-${idx}-${iIdx}">
+    <div class="subhead">📅 ${tx.monToggle}
+      <button class="mon-toggle-btn${open?' on':''}" onclick="toggleMon(${idx},${iIdx})">${open?'▲':'▼'}</button>
+      <span style="font-weight:400;color:var(--text-hint);font-size:10px">(${ind.단위})</span>
+    </div>
+    <div id="mon-body-${idx}-${iIdx}">${cells}</div>
+  </div>`;
+}
+
+/* 자동저장 디바운스 — 입력값을 화면에서 지우지 않음 */
+function scheduleSave(){
+  if(AUTO_TIMER)clearTimeout(AUTO_TIMER);
+  AUTO_TIMER=setTimeout(async()=>{
+    await saveLocal();
+  },1500);
+}
+
+function onEvidChange(idx,iIdx,q){
+  const el=document.getElementById(`ev-${idx}-${iIdx}-${q}`);
+  if(el)DATA[idx].지표[iIdx].근거[q]=el.value;
+  scheduleSave();
+}
+
+/* 월별 토글: 전체 재렌더 대신 해당 블록만 교체 (다른 입력칸 값 보존) */
+function toggleMon(idx,iIdx){
+  const ind=DATA[idx].지표[iIdx];
+  ind._monOpen=!ind._monOpen;
+  const sub=document.getElementById(`mon-sub-${idx}-${iIdx}`);
+  if(sub){
+    const wrap=document.createElement('div');
+    wrap.innerHTML=monthlyBlock(idx,iIdx,ind);
+    sub.replaceWith(wrap.firstElementChild);
+  }
+}
+
+function onMonChange(idx,iIdx,m){
+  const inp=(typeof event!=='undefined'&&event&&event.target)?event.target:null;
+  DATA[idx].지표[iIdx].월별['M'+m]=inp?inp.value:'';
+  scheduleSave();
+}
+
+/* ═══ 팀별 입력 렌더링 ═══ */
+function renderInp(idx){
+  const t=DATA[idx];const tx=T();
+  const ws=teamScore(t),fs=typeScore(t,'fin'),ms=typeScore(t,'key');
+  const g=grade(ws),gc=GC[g]?.c||'#888';
+  const oc=OC[t.사무소];
+
+  let html=`
+  <div class="preview-bar" id="pvBar-${idx}">
+    <div class="pv-item"><div class="pv-val" style="color:${sc(fs)}" id="pv-fs-${idx}">${fs!==null?fs:tx.noData}</div><div class="pv-lbl">${tx.pvFin}</div></div>
+    <div class="sep"></div>
+    <div class="pv-item"><div class="pv-val" style="color:${sc(ms)}" id="pv-ms-${idx}">${ms!==null?ms:tx.noData}</div><div class="pv-lbl">${tx.pvKey}</div></div>
+    <div class="sep"></div>
+    <div class="pv-item"><div class="pv-val" style="color:${gc}" id="pv-ws-${idx}">${ws!==null?ws:tx.noData}</div><div class="pv-lbl">${tx.pvWt}</div></div>
+    <div class="sep"></div>
+    <div class="pv-item" id="pv-grade-${idx}">${ws!==null?gb(g,'glg'):`<span style="color:var(--text-secondary);font-size:13px">${tx.notInput}</span>`}</div>
+    <div style="margin-left:auto;font-size:11px;color:var(--text-secondary);text-align:right">${tx.pvNote}</div>
+  </div>
+  <div class="card">
+    <div class="ct">
+      <span class="otag" style="background:${oc}22;color:${oc}">${toff(t.사무소)}</span>
+      <strong>${tname(t)}</strong> · ${tx.inputTitle}
+    </div>`;
+
+  t.지표.forEach((ind,iIdx)=>{
+    const bc=ind.유형==='fin'?'#FFC000':'#2E75B6';
+    const tbg=ind.유형==='fin'?'#FFF8E1':'#EFF6FF';
+    const tc=ind.유형==='fin'?'#92400E':'#1E40AF';
+    const avg=indAvg(ind);
+
+    html+=`<div class="icard" style="border-left:3px solid ${bc}">
+      <div class="ihead">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="utag" style="background:${tbg};color:${tc}">${ttype(ind.유형)}</span>
+          <span class="iname">${tind(ind)}</span>
+          <span style="font-size:11px;color:var(--text-secondary)">${tx.wtLabel} ${ind.가중}% · ${tx.targetLabel}: ${ind.목표}</span>
+        </div>
+        <div id="ind-avg-${idx}-${iIdx}">${avg!==null?`<span class="spill" style="background:${sc(avg)}">${avg}${tx.avgLabel}</span>`:`<span style="font-size:11px;color:var(--text-secondary)">${tx.notInput}</span>`}</div>
+      </div>
+      <div class="qrow">`;
+
+    QS.forEach(q=>{
+      const qd=ind.분기[q];const s=qd.점수;
+      html+=`<div class="qcard" id="qc-${idx}-${iIdx}-${q}" style="${s!==null?`border-color:${sc(s)}`:''}">
+        <div class="qlbl">${q} <span class="qperiod">${tx.qPeriods[q]}</span></div>
+        <input class="qinp" type="text" placeholder="${tx.realPlaceholder} (${ind.단위})"
+          value="${qd.실적||''}" id="ri-${idx}-${iIdx}-${q}"
+          oninput="onChange(${idx},${iIdx},'${q}')">
+        <select class="qsel" id="si-${idx}-${iIdx}-${q}" onchange="onChange(${idx},${iIdx},'${q}')">
+          <option value="">${tx.scoreSelect}</option>
+          ${tx.scoreOpts.map(o=>`<option value="${o.v}" ${s===o.v?'selected':''}>${o.l}</option>`).join('')}
+        </select>
+        <input class="qinp" type="text" placeholder="${tx.notePlaceholder}"
+          style="margin-top:6px;font-size:11px;margin-bottom:0"
+          value="${qd.비고||''}" id="ni-${idx}-${iIdx}-${q}"
+          oninput="onChange(${idx},${iIdx},'${q}')">
+        <div class="qscore-val" id="qsv-${idx}-${iIdx}-${q}" style="color:${s!==null?sc(s):'var(--text-hint)'}">${s!==null?s+tx.pointSuffix:tx.noData}</div>
+      </div>`;
+    });
+
+    html+=`</div>
+      <div class="qscore-row">
+        ${QS.map(q=>{const s=ind.분기[q].점수;return`<div class="qscore-cell">
+          <div class="qs-lbl">${q} ${tx.qPeriods[q]}</div>
+          <div class="qs-val" id="qs-${idx}-${iIdx}-${q}" style="color:${s!==null?sc(s):'var(--text-hint)'}">${s!==null?s+tx.pointSuffix:tx.noData}</div>
+        </div>`;}).join('')}
+      </div>
+      ${evidenceBlock(idx,iIdx,ind)}
+      ${monthlyBlock(idx,iIdx,ind)}
+    </div>`;
+  });
+
+  html+=`
+    <div style="display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap">
+      <button class="save-btn" onclick="doSave(${idx})" id="saveBtn-${idx}">${tx.saveBtn}</button>
+      <span style="font-size:12px;color:var(--text-secondary)">${tx.saveNote}</span>
+    </div>
+  </div>`;
+
+  document.getElementById('tab-input').innerHTML=html;
+}
+
+function onChange(tIdx,iIdx,q){
+  const ri=document.getElementById(`ri-${tIdx}-${iIdx}-${q}`);
+  const si=document.getElementById(`si-${tIdx}-${iIdx}-${q}`);
+  const ni=document.getElementById(`ni-${tIdx}-${iIdx}-${q}`);
+  if(ri)DATA[tIdx].지표[iIdx].분기[q].실적=ri.value;
+  const v=si?si.value:'';DATA[tIdx].지표[iIdx].분기[q].점수=v?parseInt(v):null;
+  if(ni)DATA[tIdx].지표[iIdx].분기[q].비고=ni.value;
+  const s=DATA[tIdx].지표[iIdx].분기[q].점수;
+  const tx=T();
+  const card=document.getElementById(`qc-${tIdx}-${iIdx}-${q}`);
+  if(card)card.style.borderColor=s!==null?sc(s):'var(--border)';
+  const qsv=document.getElementById(`qsv-${tIdx}-${iIdx}-${q}`);
+  if(qsv){qsv.textContent=s!==null?s+tx.pointSuffix:tx.noData;qsv.style.color=s!==null?sc(s):'var(--text-hint)';}
+  const qsEl=document.getElementById(`qs-${tIdx}-${iIdx}-${q}`);
+  if(qsEl){qsEl.textContent=s!==null?s+tx.pointSuffix:tx.noData;qsEl.style.color=s!==null?sc(s):'var(--text-hint)';}
+  const avg=indAvg(DATA[tIdx].지표[iIdx]);
+  const avgEl=document.getElementById(`ind-avg-${tIdx}-${iIdx}`);
+  if(avgEl)avgEl.innerHTML=avg!==null?`<span class="spill" style="background:${sc(avg)}">${avg}${tx.avgLabel}</span>`:`<span style="font-size:11px;color:var(--text-secondary)">${tx.notInput}</span>`;
+  updatePreview(tIdx);
+  scheduleSave();
+}
+
+function updatePreview(tIdx){
+  const t=DATA[tIdx];const tx=T();
+  const ws=teamScore(t),fs=typeScore(t,'fin'),ms=typeScore(t,'key');
+  const g=grade(ws),gc=GC[g]?.c||'#888';
+  const fe=document.getElementById(`pv-fs-${tIdx}`);if(fe){fe.textContent=fs!==null?fs:tx.noData;fe.style.color=sc(fs);}
+  const me=document.getElementById(`pv-ms-${tIdx}`);if(me){me.textContent=ms!==null?ms:tx.noData;me.style.color=sc(ms);}
+  const we=document.getElementById(`pv-ws-${tIdx}`);if(we){we.textContent=ws!==null?ws:tx.noData;we.style.color=gc;}
+  const ge=document.getElementById(`pv-grade-${tIdx}`);if(ge)ge.innerHTML=ws!==null?gb(g,'glg'):`<span style="color:var(--text-secondary);font-size:13px">${tx.notInput}</span>`;
+}
+
+async function doSave(idx){
+  const btn=document.getElementById('saveBtn-'+idx);const tx=T();
+  if(btn){btn.disabled=true;btn.textContent=tx.saving;}
+  setSyncStatus('syncing');
+  const ok=await saveLocal();
+  if(btn){btn.disabled=false;btn.textContent=ok?tx.saveOk:tx.saveFail;btn.style.background=ok?'#1B873F':'#DC2626';
+    setTimeout(()=>{btn.textContent=tx.saveBtn;btn.style.background='var(--navy)';},2500);}
+  showToast(ok?tx.toastOk:tx.toastFail,ok);
+}
+
+/* ═══ 초기화 ═══ */
+async function init(){
+  /* 로딩 화면 표시 */
+  const loadScr=document.getElementById('loadScr');
+  const loadMsg=document.getElementById('loadMsg');
+  if(loadMsg)loadMsg.textContent='구글 시트에서 데이터를 불러오는 중…';
+  await loadLocal();
+  if(loadScr)loadScr.style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('btnKO').classList.toggle('on',LANG==='ko');
+  document.getElementById('btnEN').classList.toggle('on',LANG==='en');
+  document.getElementById('hdrTitle').textContent=T().sysTitle;
+  document.getElementById('hdrSub').textContent=T().sysSubtitle;
+  document.getElementById('hdrBadge').textContent=T().yearBadge;
+  const be=document.getElementById('btnExport'),bi=document.getElementById('btnImport');
+  if(be)be.title=T().exportTitle;if(bi)bi.title=T().importTitle;
+  buildTabs();showOv();
+}
+init();
+</script>
+</body>
+</html>
